@@ -1,33 +1,50 @@
-# Project
+# Distributed training of Image segmentation on Azure ML
 
-> This repo has been populated by an initial template to help get you started. Please
-> make sure to update the content to build a great experience for community-building.
+The repo will show how to complete distributional training of image segmentation on Azure ML.
 
-As the maintainer of this project, please make a few updates:
+## Platform
 
-- Improving this README.MD file to provide a great experience
-- Updating SUPPORT.MD with content about this project's support experience
-- Understanding the security reporting process in SECURITY.MD
-- Remove this section from the README
+We complete the distributional training in Azure ML by using mutiple nodes and mutiple GPU's per node.
 
-## Contributing
+[Azure Machine Learning](https://azure.microsoft.com/en-us/services/machine-learning/)
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
-Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+[Azure ML SDK](https://docs.microsoft.com/en-us/python/api/overview/azure/ml/?view=azure-ml-py)
 
-When you submit a pull request, a CLA bot will automatically determine whether you need to provide
-a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
-provided by the bot. You will only need to do this once across all repos using our CLA.
+To run the notebook, you need to have/create:
+1. Create/have Azure subscription
+2. Create/have Azure storage
+3. Create/have Azure ML workspace
+4. (Optional) Create/have Azure ML compute target (4 nodes of STANDARD_NC24) - this can be created in notebook.
 
-This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
-For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
-contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+## Dataset
 
-## Trademarks
+We used the data from a kaggle project:
 
-This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft 
-trademarks or logos is subject to and must follow 
-[Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/en-us/legal/intellectualproperty/trademarks/usage/general).
-Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship.
-Any use of third-party trademarks or logos are subject to those third-party's policies.
+https://www.kaggle.com/c/airbus-ship-detection
+
+The project is for segmenting ships from sattelite images. We used their train_v2 data.
+
+To run the notebook, you need to:
+1. create a container in Azure storage.
+2. Upload "train_v2" into the container with folder name "airbus"
+
+## Package
+We used a package "Fast.AI". It can use less codes to create deep learning model and train the model. For example, we used 3 lines for the image classfication:
+
+>data = ImageDataBunch.from_folder(data_folder, train=".", valid_pct=0.2, ds_tfms=get_transforms(), size=sz, bs = bs, num_workers=8).normalize(imagenet_stats)
+
+>learn = cnn_learner(data, models.resnet34, metrics=dice)
+
+>learn.fit_one_cycle(5, slice(1e-5), pct_start=0.8)
+
+Fast.AI supports computer vision (CNN and U-Net), and NLP (transformer). Please find details in their website.
+
+https://www.fast.ai/
+
+You can install it by:
+
+>pip install fastai
+
+## Distributional training
+
+Fasi.AI only support the NCCL backend distributional training, which is not natively supported by Azure ML. We used a script "azureml_adapter.py" to help complete the NCCL initialization on Azure ML.
